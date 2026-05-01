@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvoiceKit — Professional Invoice Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f7f6f3;
+    --white: #ffffff;
+    --dark: #1a1a1a;
+    --mid: #444;
+    --muted: #888;
+    --light: #e8e6e0;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --danger: #ef4444;
+    --success: #16a34a;
+    --border: #e2e0d8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--dark);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--dark);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-dot { color: var(--accent); }
+
+  .header-actions { display: flex; gap: 10px; }
+
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--mid);
+  }
+  .btn-ghost:hover { border-color: var(--dark); color: var(--dark); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+  .btn-success:hover { background: #15803d; }
+
+  /* LAYOUT */
+  .app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* FORM PANEL */
+  .form-panel {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.full { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--mid);
+    letter-spacing: 0.02em;
+  }
+
+  input, textarea, select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem;
+    color: var(--dark);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+    background: var(--white);
+  }
+  textarea { resize: vertical; min-height: 72px; }
+
+  /* ITEMS TABLE */
+  .items-header {
+    display: grid;
+    grid-template-columns: 2fr 80px 100px 100px 40px;
+    gap: 10px;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .items-header span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .items-header span:nth-child(2),
+  .items-header span:nth-child(3),
+  .items-header span:nth-child(4) { text-align: right; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 2fr 80px 100px 100px 40px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .item-row input { text-align: left; }
+  .item-row input:nth-child(2),
+  .item-row input:nth-child(3) { text-align: right; }
+
+  .item-amount {
+    text-align: right;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--dark);
+    padding: 10px 0;
+  }
+
+  .btn-remove {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .btn-remove:hover { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
+
+  .btn-add-item {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 7px;
+    color: var(--accent);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-add-item:hover { background: var(--accent-light); border-color: var(--accent); }
+
+  /* COLOR PICKER */
+  .color-options {
+    display: flex; gap: 10px; margin-top: 8px;
+  }
+  .color-opt {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .color-opt.active { border-color: var(--dark); transform: scale(1.15); }
+
+  /* PREVIEW PANEL */
+  .preview-panel { position: sticky; top: 88px; }
+
+  .preview-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .preview-header-bar {
+    height: 6px;
+    background: var(--accent);
+    transition: background 0.3s;
+  }
+
+  /* INVOICE PREVIEW */
+  .invoice-preview {
+    padding: 36px 32px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .inv-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 32px;
+  }
+
+  .inv-logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--dark);
+    font-weight: 500;
+  }
+
+  .inv-badge {
+    text-align: right;
+  }
+  .inv-badge .inv-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    transition: color 0.3s;
+  }
+  .inv-badge .inv-num {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .inv-parties {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+    padding: 20px;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+
+  .inv-party-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .inv-party-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+
+  .inv-party-details { color: var(--muted); font-size: 0.72rem; line-height: 1.6; }
+
+  .inv-meta {
+    display: flex; gap: 24px;
+    margin-bottom: 24px;
+  }
+  .inv-meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .inv-meta-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .inv-meta-value { font-weight: 600; font-size: 0.8rem; }
+
+  .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  .inv-table th {
+    text-align: left;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .inv-table th:not(:first-child) { text-align: right; }
+  .inv-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--light);
+    font-size: 0.75rem;
+    vertical-align: top;
+  }
+  .inv-table td:not(:first-child) { text-align: right; }
+  .inv-table .td-desc { font-weight: 500; color: var(--dark); }
+  .inv-table .td-sub { color: var(--muted); font-size: 0.68rem; margin-top: 2px; }
+
+  .inv-totals {
+    display: flex; flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .inv-total-row {
+    display: flex; gap: 48px;
+    font-size: 0.75rem;
+  }
+  .inv-total-row span:first-child { color: var(--muted); }
+  .inv-total-row span:last-child { font-weight: 500; min-width: 70px; text-align: right; }
+  .inv-total-row.grand {
+    border-top: 2px solid var(--dark);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+  .inv-total-row.grand span { font-weight: 700; font-size: 0.9rem; }
+  .inv-total-row.grand span:last-child { color: var(--accent); transition: color 0.3s; }
+
+  .inv-note {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .inv-note-label { font-weight: 600; color: var(--dark); margin-bottom: 4px; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .inv-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+    padding-top: 16px;
+    border-top: 1px solid var(--light);
+  }
+
+  /* SUMMARY */
+  .summary-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .summary-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--light);
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row.total {
+    font-weight: 700;
+    font-size: 1rem;
+    padding-top: 12px;
+  }
+  .summary-row.total span:last-child { color: var(--accent); }
+
+  .action-buttons {
+    display: flex; gap: 10px; margin-top: 16px;
+  }
+  .action-buttons .btn { flex: 1; text-align: center; }
+
+  /* PRINT */
+  @media print {
+    body { background: white; }
+    header, .form-panel, .summary-card, .action-buttons { display: none !important; }
+    .app { grid-template-columns: 1fr; max-width: 100%; padding: 0; }
+    .preview-panel { position: static; }
+    .preview-card { border: none; border-radius: 0; box-shadow: none; }
+    .invoice-preview { padding: 24px; }
+  }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .preview-panel { position: static; }
+    header { padding: 0 20px; }
+  }
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .form-row.three { grid-template-columns: 1fr 1fr; }
+    .items-header, .item-row {
+      grid-template-columns: 1fr 60px 80px 40px;
+    }
+    .items-header span:nth-child(3),
+    .item-row input:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">InvoiceKit<span class="logo-dot">.</span></div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="resetForm()">🗑 Clear</button>
+    <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-primary" onclick="downloadPDF()">⬇ Download PDF</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- FORM PANEL -->
+  <div class="form-panel">
+
+    <!-- Business Info -->
+    <div class="card">
+      <div class="card-title">Your Business</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Name</label>
+          <input type="text" id="bizName" placeholder="Akash Designs" oninput="update()">
+        </div>
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="bizPerson" placeholder="Akash Poojari" oninput="update()">
+        </div>
+      </div>
+      <div class="form-row full" style="margin-top:14px">
+        <div class="form-group">
+          <label>Email & Phone</label>
+          <input type="text" id="bizContact" placeholder="akash@email.com  |  +91 98765 43210" oninput="update()">
+        </div>
+      </div>
+      <div class="form-row full" style="margin-top:14px">
+        <div class="form-group">
+          <label>Address</label>
+          <textarea id="bizAddress" placeholder="Alappuzha, Kerala, India" rows="2" oninput="update()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Client Info -->
+    <div class="card">
+      <div class="card-title">Client Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client / Company Name</label>
+          <input type="text" id="clientName" placeholder="ABC Restaurant" oninput="update()">
+        </div>
+        <div class="form-group">
+          <label>Client Email</label>
+          <input type="text" id="clientEmail" placeholder="client@email.com" oninput="update()">
+        </div>
+      </div>
+      <div class="form-row full" style="margin-top:14px">
+        <div class="form-group">
+          <label>Client Address</label>
+          <textarea id="clientAddress" placeholder="Client address..." rows="2" oninput="update()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice Details -->
+    <div class="card">
+      <div class="card-title">Invoice Details</div>
+      <div class="form-row three">
+        <div class="form-group">
+          <label>Invoice Number</label>
+          <input type="text" id="invNum" value="INV-001" oninput="update()">
+        </div>
+        <div class="form-group">
+          <label>Issue Date</label>
+          <input type="date" id="invDate" oninput="update()">
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="dueDate" oninput="update()">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label>Currency</label>
+          <select id="currency" onchange="update()">
+            <option value="₹">INR (₹)</option>
+            <option value="$">USD ($)</option>
+            <option value="€">EUR (€)</option>
+            <option value="£">GBP (£)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tax Rate (%)</label>
+          <input type="number" id="taxRate" value="0" min="0" max="100" oninput="update()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div class="card">
+      <div class="card-title">Items & Services</div>
+      <div class="items-header">
+        <span>Description</span>
+        <span style="text-align:right">Qty</span>
+        <span style="text-align:right">Rate</span>
+        <span style="text-align:right">Amount</span>
+        <span></span>
+      </div>
+      <div id="items-container"></div>
+      <button class="btn-add-item" onclick="addItem()">+ Add Line Item</button>
+    </div>
+
+    <!-- Notes -->
+    <div class="card">
+      <div class="card-title">Notes & Payment Info</div>
+      <div class="form-group">
+        <label>Payment Terms / Bank Details</label>
+        <textarea id="notes" rows="3" placeholder="Bank: SBI  |  Account: 1234567890  |  IFSC: SBIN0001234&#10;Thank you for your business!" oninput="update()"></textarea>
+      </div>
+    </div>
+
+    <!-- Accent Color -->
+    <div class="card">
+      <div class="card-title">Invoice Color</div>
+      <div class="color-options" id="colorOptions">
+        <div class="color-opt active" style="background:#2563eb" data-color="#2563eb" onclick="setColor(this)"></div>
+        <div class="color-opt" style="background:#16a34a" data-color="#16a34a" onclick="setColor(this)"></div>
+        <div class="color-opt" style="background:#dc2626" data-color="#dc2626" onclick="setColor(this)"></div>
+        <div class="color-opt" style="background:#9333ea" data-color="#9333ea" onclick="setColor(this)"></div>
+        <div class="color-opt" style="background:#ea580c" data-color="#ea580c" onclick="setColor(this)"></div>
+        <div class="color-opt" style="background:#0891b2" data-color="#0891b2" onclick="setColor(this)"></div>
+        <div class="color-opt" style="background:#1a1a1a" data-color="#1a1a1a" onclick="setColor(this)"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PREVIEW PANEL -->
+  <div class="preview-panel">
+    <div class="preview-card">
+      <div class="preview-header-bar" id="colorBar"></div>
+      <div class="invoice-preview" id="invoicePreview">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0.00</span></div>
+      <div class="summary-row"><span id="s-tax-label">Tax (0%)</span><span id="s-tax">₹0.00</span></div>
+      <div class="summary-row total"><span>Total Due</span><span id="s-total">₹0.00</span></div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-ghost" onclick="window.print()" style="flex:1">🖨 Print</button>
+      <button class="btn btn-primary" onclick="downloadPDF()" style="flex:2">⬇ Download PDF</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+  let accentColor = '#2563eb';
+  let items = [
+    { desc: '', qty: 1, rate: 0 }
+  ];
+
+  // Set today & due date defaults
+  const today = new Date();
+  const due = new Date(); due.setDate(due.getDate() + 14);
+  document.getElementById('invDate').value = today.toISOString().split('T')[0];
+  document.getElementById('dueDate').value = due.toISOString().split('T')[0];
+
+  function fmt(n) {
+    const cur = document.getElementById('currency')?.value || '₹';
+    return cur + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function renderItems() {
+    const container = document.getElementById('items-container');
+    container.innerHTML = items.map((item, i) => `
+      <div class="item-row" id="item-${i}">
+        <input type="text" placeholder="Service / Item description" value="${item.desc}"
+          oninput="items[${i}].desc=this.value;update()">
+        <input type="number" placeholder="1" value="${item.qty}" min="1"
+          oninput="items[${i}].qty=parseFloat(this.value)||0;update()" style="text-align:right">
+        <input type="number" placeholder="0.00" value="${item.rate||''}" min="0"
+          oninput="items[${i}].rate=parseFloat(this.value)||0;update()" style="text-align:right">
+        <div class="item-amount">${fmt(item.qty * item.rate)}</div>
+        <button class="btn-remove" onclick="removeItem(${i})" title="Remove">×</button>
+      </div>
+    `).join('');
+  }
+
+  function addItem() {
+    items.push({ desc: '', qty: 1, rate: 0 });
+    renderItems();
+    update();
+  }
+
+  function removeItem(i) {
+    if (items.length === 1) return;
+    items.splice(i, 1);
+    renderItems();
+    update();
+  }
+
+  function calcTotals() {
+    const subtotal = items.reduce((s, it) => s + (it.qty * it.rate), 0);
+    const taxRate = parseFloat(document.getElementById('taxRate')?.value) || 0;
+    const tax = subtotal * taxRate / 100;
+    return { subtotal, tax, taxRate, total: subtotal + tax };
+  }
+
+  function update() {
+    renderItems();
+    const { subtotal, tax, taxRate, total } = calcTotals();
+    const cur = document.getElementById('currency')?.value || '₹';
+
+    document.getElementById('s-subtotal').textContent = fmt(subtotal);
+    document.getElementById('s-tax-label').textContent = `Tax (${taxRate}%)`;
+    document.getElementById('s-tax').textContent = fmt(tax);
+    document.getElementById('s-total').textContent = fmt(total);
+
+    // Update invoice preview
+    const bizName = document.getElementById('bizName')?.value || 'Your Business';
+    const bizPerson = document.getElementById('bizPerson')?.value || '';
+    const bizContact = document.getElementById('bizContact')?.value || '';
+    const bizAddress = document.getElementById('bizAddress')?.value || '';
+    const clientName = document.getElementById('clientName')?.value || 'Client Name';
+    const clientEmail = document.getElementById('clientEmail')?.value || '';
+    const clientAddress = document.getElementById('clientAddress')?.value || '';
+    const invNum = document.getElementById('invNum')?.value || 'INV-001';
+    const invDate = document.getElementById('invDate')?.value || '';
+    const dueDate = document.getElementById('dueDate')?.value || '';
+    const notes = document.getElementById('notes')?.value || '';
+
+    const formatDate = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+
+    const tableRows = items.map(it => `
+      <tr>
+        <td><div class="td-desc">${it.desc || 'Service'}</div></td>
+        <td>${it.qty}</td>
+        <td>${fmt(it.rate)}</td>
+        <td>${fmt(it.qty * it.rate)}</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('invoicePreview').innerHTML = `
+      <div class="inv-top">
+        <div>
+          <div class="inv-logo-text">${bizName}</div>
+          <div style="color:var(--muted);font-size:0.7rem;margin-top:4px">${bizPerson}</div>
+        </div>
+        <div class="inv-badge">
+          <div class="inv-title" style="color:${accentColor}">INVOICE</div>
+          <div class="inv-num">${invNum}</div>
+        </div>
+      </div>
+
+      <div class="inv-parties">
+        <div>
+          <div class="inv-party-label">From</div>
+          <div class="inv-party-name">${bizName}</div>
+          <div class="inv-party-details">${bizContact}<br>${bizAddress.replace(/\n/g,'<br>')}</div>
+        </div>
+        <div>
+          <div class="inv-party-label">Bill To</div>
+          <div class="inv-party-name">${clientName}</div>
+          <div class="inv-party-details">${clientEmail}<br>${clientAddress.replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>
+
+      <div class="inv-meta">
+        <div class="inv-meta-item">
+          <span class="inv-meta-label">Issue Date</span>
+          <span class="inv-meta-value">${formatDate(invDate)}</span>
+        </div>
+        <div class="inv-meta-item">
+          <span class="inv-meta-label">Due Date</span>
+          <span class="inv-meta-value">${formatDate(dueDate)}</span>
+        </div>
+        <div class="inv-meta-item">
+          <span class="inv-meta-label">Currency</span>
+          <span class="inv-meta-value">${cur}</span>
+        </div>
+      </div>
+
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th style="text-align:right">Qty</th>
+            <th style="text-align:right">Rate</th>
+            <th style="text-align:right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+
+      <div class="inv-totals">
+        <div class="inv-total-row"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
+        ${taxRate > 0 ? `<div class="inv-total-row"><span>Tax (${taxRate}%)</span><span>${fmt(tax)}</span></div>` : ''}
+        <div class="inv-total-row grand">
+          <span>Total Due</span>
+          <span style="color:${accentColor}">${fmt(total)}</span>
+        </div>
+      </div>
+
+      ${notes ? `<div class="inv-note"><div class="inv-note-label">Notes & Payment</div>${notes.replace(/\n/g,'<br>')}</div>` : ''}
+
+      <div class="inv-footer">Generated with InvoiceKit · Thank you for your business!</div>
+    `;
+
+    // Update color bar
+    document.getElementById('colorBar').style.background = accentColor;
+  }
+
+  function setColor(el) {
+    document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    accentColor = el.dataset.color;
+    update();
+  }
+
+  function resetForm() {
+    if (!confirm('Clear all data?')) return;
+    document.querySelectorAll('input, textarea').forEach(el => {
+      if (el.type === 'date') return;
+      if (el.id === 'invNum') { el.value = 'INV-001'; return; }
+      if (el.id === 'taxRate') { el.value = '0'; return; }
+      el.value = '';
+    });
+    items = [{ desc: '', qty: 1, rate: 0 }];
+    update();
+  }
+
+  function downloadPDF() {
+    const el = document.getElementById('invoicePreview');
+    const invNum = document.getElementById('invNum')?.value || 'invoice';
+    const opt = {
+      margin: 0.4,
+      filename: `${invNum}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(el).save();
+  }
+
+  // Init
+  update();
+</script>
+</body>
+</html>
